@@ -1,86 +1,90 @@
 <!DOCTYPE html>
 <head>
 <title>Assteroids</title>
+<link rel="stylesheet" href="assteroid.css">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body onload="startGame()">
 
 <script>
 var assteroids = [];
-var myScore;
+let done = false;
 function startGame() {
     myGameArea.start();
 }
-let myGameArea = {
+var myGameArea = {
     canvas : document.createElement("canvas"),
     start : function() { // initialize the game
-        this.canvas.width = 900;
-        this.canvas.height = 580;
+        this.canvas.width = 1200;
+        this.canvas.height = 800;
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
         this.frameNo = 0;
-        this.interval = setInterval(updateGameArea, 30);
-        },
+        this.interval = setInterval(updateGameArea, 20);
+    },
     clear : function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
-
-
+    },
+    end : function() {
+        console.log("crash!");
+        var loser = document.createElement("H1").appendChild(document.createTextNode("YOU LOST! Butt you saved", assteroids.length, "assteroids!")); // I don't think this actually ends the game, it just appends an H1 tag to the document
+        document.body.innerHTML = loser;
+        this.done = true;
+    } 
 }
-
 function assteroid() {
+    var butt = document.createElement("img");
+    butt.setAttribute('src', 'assteroid_v2.png');
+    butt.setAttribute('class', 'overlays');
+    document.body.appendChild(butt);
     // create assteroid object
     this.x = Math.random() * myGameArea.canvas.width + 100; // x coordinate
     this.y = Math.random() * myGameArea.canvas.height + 100; // y coordinate
     this.width = Math.random() * 30 + 10;
-    this.speedx = 10;
-    //(Math.random() * 2 % 2) === 0 ? Math.floor(Math.random() * 4) : Math.floor(Math.random() * 4) * -1; // horizontal speed
-    this.speedy = 10;//(Math.random() * 2 % 2) === 0 ? Math.floor(Math.random() * 4) : Math.floor(Math.random() * 4) * -1; // vertical speed
-    ctx = myGameArea.context;
-    ctx.beginPath(); // draw circle
-    ctx.arc(this.x, this.y, 50, 0, Math.PI*2);
-    ctx.fillStyle = "#DD95AA"; // color circle
-    ctx.fill();
-    ctx.closePath();
+    this.speedx = (Math.random() * 2 % 2) === 0 ? Math.floor(Math.random() * 4 + 1) : Math.floor(Math.random() * 4 + 1) * -1; // horizontal speed
+    this.speedy = (Math.random() * 2 % 2) === 0 ? Math.floor(Math.random() * 4 + 1) : Math.floor(Math.random() * 4 + 1) * -1;
     this.update = function() { // move and redraw assteroid
-        console.log("updating");
-        console.log("before",this.x,this.y);
-        this.x = this.x + this.speedx;
-        this.y = this.y + this.speedy;
-        console.log("after",this.x,this.y);
-        ctx.fill();
+        // ctx = myGameArea.context;
+        // ctx.beginPath(); // draw circle
+        // ctx.arc(this.x, this.y, this.width, 0, Math.PI*2);
+        // ctx.closePath();
+        // ctx.fillStyle = "#DD95AA"; // color circle
+        // ctx.fill();
+        this.x += this.speedx;
+        this.y += this.speedy;
+        butt.style.left = this.x + "px";
+        butt.style.top = this.y + "px";
         // update x and y positions using speedx and speedy 
     }
     this.crashed = function() {
         // return true or false based on size and position... not very reliable
         for (i = 0; i < assteroids.length - 1; i += 1) {
-            if (Math.abs(assteroids[i].x - assteroids[i+1].x) < Math.max(assteroids[i].width) && Math.abs(assteroids[i].y - assteroids[i+1].y) < Math.max(assteroids[i].width)) {
-                return true;
+            if (assteroids[i].x + assteroids[i].width > myGameArea.canvas.width || assteroids[i].x < 0 || assteroids[i].y + assteroids[i].width > myGameArea.canvas.height || assteroids[i].y < 0) {
+                myGameArea.end();
             }
         }
         return false;
     }
 }
 function updateGameArea() {
-    // call this function to avoid leaving trailing paths and test if anything has crashed yet
-    for (i = 0; i < assteroids.length; i += 1) {
-        if (assteroids[i].crashed()) {
-            console.log("crash!");
-            let loser = document.createElement("H1").appendChild(document.createTextNode("YOU LOST!")); // I don't think this actually ends the game, it just appends an H1 tag to the document
-            document.body.insertBefore(loser, document.body.childNodes[0]);
-        } 
-    }
-    myGameArea.clear(); // refresh screen before updating assteroid drawings
-    myGameArea.frameNo += 1; 
-    console.log("assteroids:", assteroids);
-    if (myGameArea.frameNo == 1 || everyinterval(150)) { // every 150 ms draw a new assteroid and add it to our list of assteroids
-        console.log("pushing!", assteroids.length);
-        var ass = new assteroid();
-        assteroids.push(ass);
-    }
-    console.log("assteroids 2:", assteroids);
-    for (i = 0; i < assteroids.length; i +=1) {
-        console.log("hi! ", i);
-        assteroids[i].update(); // update all of our assteroids (change x and y positions)
+    if (!done) {
+        // call this function to avoid leaving trailing paths and test if anything has crashed yet
+        for (i = 0; i < assteroids.length; i += 1) {
+            if (assteroids[i].crashed()) {
+                myGameArea.end();
+            } 
+        }
+        myGameArea.clear(); // refresh screen before updating assteroid drawings
+        myGameArea.frameNo += 1; 
+        if (myGameArea.frameNo == 1 || everyinterval(150)) { // every 150 ms draw a new assteroid and add it to our list of assteroids
+            assteroids.push(new assteroid());
+        }
+        if (myGameArea.frameNo === 1) assteroids.push(new assteroid());
+        console.log(assteroids[0].x, assteroids[0].y);
+        for (i = 0; i < assteroids.length; i +=1) {
+            assteroids[i].update(); // update all of our assteroids (change x and y positions)
+        }
     }
 }
 function everyinterval(n) {
